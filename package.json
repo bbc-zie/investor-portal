@@ -1,0 +1,16 @@
+{
+  "name": "investor-portal",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @investor-portal/api",
+    "dev:api": "npm run dev --workspace @investor-portal/api",
+    "dev:web": "npm run dev --workspace @investor-portal/web",
+    "build": "npm run build --workspace @investor-portal/api && npm run build --workspace @investor-portal/web",
+    "typecheck": "npm run typecheck --workspace @investor-portal/api && npm run typecheck --workspace @investor-portal/web",
+    "prisma:generate": "npm run prisma:generate --workspace @investor-portal/api"
+  }
+}
