@@ -8,23 +8,27 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/server.js",
+    "seed:dev-user": "tsx src/scripts/seedDevUser.ts",
     "prisma:validate": "prisma validate --schema prisma/schema.prisma",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@bbc-investor-portal/shared": "0.1.0",
     "@prisma/client": "^5.19.1",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.5.4",
     "prisma": "^5.19.1",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4"
   }
 }
-

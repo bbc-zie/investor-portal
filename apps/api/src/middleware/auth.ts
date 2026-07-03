@@ -11,6 +11,8 @@ import {
   type UserRole
 } from "@bbc-investor-portal/shared";
 import { env } from "../config/env.js";
+import { createAuthUser, verifyAccessToken } from "../lib/auth.js";
+import { prisma } from "../lib/prisma.js";
 
 const readHeader = (req: Request, name: string) => {
   const value = req.header(name);
@@ -40,9 +42,45 @@ const parseMockUser = (req: Request) => {
   };
 };
 
-export const authMiddleware = (req: Request, _res: Response, next: NextFunction) => {
-  req.user = parseMockUser(req);
-  next();
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const devUser = parseMockUser(req);
+    if (devUser) {
+      req.user = devUser;
+      next();
+      return;
+    }
+
+    const authorization = readHeader(req, "authorization");
+    if (!authorization) {
+      next();
+      return;
+    }
+
+    if (!authorization.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const token = authorization.slice("Bearer ".length).trim();
+    if (!token) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const userId = verifyAccessToken(token);
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    req.user = createAuthUser(user);
+    next();
+  } catch (_error) {
+    res.status(401).json({ error: "Unauthorized" });
+  }
 };
 
 export const requireAuthenticated = (req: Request, res: Response, next: NextFunction) => {

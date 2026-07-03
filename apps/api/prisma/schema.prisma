@@ -116,9 +116,12 @@ model User {
   id              String         @id @default(cuid())
   email           String         @unique
   name            String?
+  passwordHash    String?
   role            UserRole       @default(INVESTOR)
   tier            InvestorTier   @default(PUBLIC)
   status          AccountStatus  @default(ACTIVE)
+  lastLoginAt     DateTime?
+  refreshTokens   RefreshToken[]
   investorProfile InvestorProfile?
   investments     Investment[]
   documents       Document[]     @relation("UploadedDocuments")
@@ -130,6 +133,22 @@ model User {
   @@index([role])
   @@index([tier])
   @@index([status])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@index([revokedAt])
 }
 
 model InvestorProfile {
