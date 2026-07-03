@@ -1,0 +1,20 @@
+{
+  "name": "bbc-investor-portal",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run build --workspace @bbc-investor-portal/shared && npm run dev --workspace @bbc-investor-portal/api",
+    "dev:web": "npm run build --workspace @bbc-investor-portal/shared && npm run dev --workspace @bbc-investor-portal/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "prisma:validate": "npm run prisma:validate --workspace @bbc-investor-portal/api",
+    "prisma:generate": "npm run prisma:generate --workspace @bbc-investor-portal/api"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,0 +1,336 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  INVESTOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum InvestorTier {
+  PUBLIC
+  APPROVED_INVESTOR
+  ACTIVE_INVESTOR
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NdaStatus {
+  NOT_REQUIRED
+  PENDING
+  SIGNED
+  EXPIRED
+}
+
+enum OpportunityStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum InvestmentStatus {
+  PENDING
+  ACTIVE
+  EXITED
+  CANCELLED
+}
+
+enum CapitalCallStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum DistributionStatus {
+  DRAFT
+  ISSUED
+  PAID
+  CANCELLED
+}
+
+enum DocumentAccessLevel {
+  PUBLIC
+  INVESTOR
+  APPROVED_INVESTOR
+  ACTIVE_INVESTOR
+  ADMIN
+}
+
+enum NotificationType {
+  SYSTEM
+  OPPORTUNITY
+  CAPITAL_CALL
+  DISTRIBUTION
+  DOCUMENT
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  VIEW
+  DOWNLOAD
+  APPROVE
+  REJECT
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  name            String?
+  role            UserRole       @default(INVESTOR)
+  tier            InvestorTier   @default(PUBLIC)
+  status          AccountStatus  @default(ACTIVE)
+  investorProfile InvestorProfile?
+  investments     Investment[]
+  documents       Document[]     @relation("UploadedDocuments")
+  notifications   Notification[]
+  auditLogs        AuditLog[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([role])
+  @@index([tier])
+  @@index([status])
+}
+
+model InvestorProfile {
+  id             String      @id @default(cuid())
+  userId         String      @unique
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  legalName      String?
+  phone          String?
+  company        String?
+  kycStatus      KycStatus   @default(NOT_STARTED)
+  ndaRecords     NdaRecord[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([kycStatus])
+}
+
+model NdaRecord {
+  id                String          @id @default(cuid())
+  investorProfileId String
+  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  status            NdaStatus       @default(PENDING)
+  signedAt          DateTime?
+  expiresAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([investorProfileId])
+  @@index([status])
+}
+
+model Project {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  summary       String?
+  status        ProjectStatus  @default(DRAFT)
+  opportunities Opportunity[]
+  investments   Investment[]
+  distributions Distribution[]
+  documents     Document[]
+  auditLogs     AuditLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status])
+}
+
+model Opportunity {
+  id             String            @id @default(cuid())
+  projectId      String
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title          String
+  summary        String?
+  status         OpportunityStatus @default(DRAFT)
+  targetAmount   Decimal?          @db.Decimal(18, 2)
+  minimumAmount  Decimal?          @db.Decimal(18, 2)
+  opensAt        DateTime?
+  closesAt       DateTime?
+  investments    Investment[]
+  documents      Document[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model Investment {
+  id           String              @id @default(cuid())
+  userId       String
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId    String
+  project      Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  opportunityId String?
+  opportunity  Opportunity?        @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  amount       Decimal             @db.Decimal(18, 2)
+  status       InvestmentStatus    @default(PENDING)
+  capitalCalls CapitalCall[]
+  distributions DistributionPayout[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([opportunityId])
+  @@index([status])
+}
+
+model CapitalCall {
+  id            String                @id @default(cuid())
+  investmentId  String
+  investment    Investment            @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  amount        Decimal               @db.Decimal(18, 2)
+  dueDate       DateTime?
+  status        CapitalCallStatus     @default(DRAFT)
+  payments      CapitalCallPayment[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@index([investmentId])
+  @@index([status])
+}
+
+model CapitalCallPayment {
+  id            String       @id @default(cuid())
+  capitalCallId String
+  capitalCall   CapitalCall  @relation(fields: [capitalCallId], references: [id], onDelete: Cascade)
+  amount        Decimal      @db.Decimal(18, 2)
+  status        PaymentStatus @default(PENDING)
+  paidAt        DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([capitalCallId])
+  @@index([status])
+}
+
+model Distribution {
+  id          String               @id @default(cuid())
+  projectId   String
+  project     Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  amount      Decimal              @db.Decimal(18, 2)
+  status      DistributionStatus   @default(DRAFT)
+  payouts     DistributionPayout[]
+  issuedAt    DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model DistributionPayout {
+  id             String        @id @default(cuid())
+  distributionId String
+  distribution   Distribution  @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  investmentId   String
+  investment     Investment    @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  amount         Decimal       @db.Decimal(18, 2)
+  status         PaymentStatus @default(PENDING)
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([distributionId])
+  @@index([investmentId])
+  @@index([status])
+}
+
+model Document {
+  id             String              @id @default(cuid())
+  title          String
+  description    String?
+  fileUrl        String
+  accessLevel    DocumentAccessLevel @default(INVESTOR)
+  projectId      String?
+  project        Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  opportunityId  String?
+  opportunity    Opportunity?        @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  uploadedById   String?
+  uploadedBy     User?               @relation("UploadedDocuments", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([projectId])
+  @@index([opportunityId])
+  @@index([uploadedById])
+  @@index([accessLevel])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([type])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  action    AuditAction
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([action])
+}
