@@ -1,7 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { AxiosError } from "axios";
 import { useEffect, useState, type FormEvent } from "react";
-import { ADMIN_ROLES, AUTH_ERROR_MESSAGES, WEB_ROUTES } from "@bbc-investor-portal/shared";
+import { AUTH_ERROR_MESSAGES } from "@bbc-investor-portal/shared";
+import { getPostAuthRoute } from "../auth/access";
 import { useAuth } from "../auth/auth-context";
 import { consumeAuthSessionMessage } from "../api/client";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -49,13 +50,18 @@ export const LoginPage = () => {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const user = await login({ email, password });
-      await navigate({
-        to: ADMIN_ROLES.includes(user.role) ? WEB_ROUTES.adminDashboard : WEB_ROUTES.investorDashboard
-      });
+      const user = await login({ email: normalizedEmail, password });
+      await navigate({ to: getPostAuthRoute(user) });
     } catch (submitError) {
       setError(getErrorMessage(submitError));
     } finally {

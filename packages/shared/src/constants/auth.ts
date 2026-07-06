@@ -5,8 +5,13 @@ export const AUTH_ERROR_MESSAGES = {
   tooManyLoginAttempts: "Too many failed login attempts. Please try again later.",
   unexpectedLoginError: "Unable to sign in. Please try again.",
   networkLoginError: "Network error. Please check your connection and try again.",
-  expiredSession: "Your session has expired. Please sign in again."
+  expiredSession: "Your session has expired. Please sign in again.",
+  unauthorized: "Please sign in to continue.",
+  forbidden: "Your account does not have access to this area.",
+  ndaRequired: "Please accept the NDA to continue."
 } as const;
+
+export const NDA_REQUIRED_TIERS = ["APPROVED_INVESTOR", "ACTIVE_INVESTOR"] as const;
 
 export const AUTH_RATE_LIMIT = {
   loginFailedAttempts: 5,

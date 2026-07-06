@@ -9,6 +9,7 @@ import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
 import { HomePage } from "./pages/HomePage";
 import { InvestorDashboardPage } from "./pages/investor/InvestorDashboardPage";
 import { LoginPage } from "./pages/LoginPage";
+import { NdaPage } from "./pages/NdaPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { TestDbPage } from "./pages/TestDbPage";
 import { UnauthorizedPage } from "./pages/UnauthorizedPage";
@@ -57,6 +58,12 @@ const loginRoute = createRoute({
   component: LoginPage
 });
 
+const ndaRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: WEB_ROUTES.nda,
+  component: NdaPage
+});
+
 const testDbRoute = createRoute({
   getParentRoute: () => publicLayoutRoute,
   path: WEB_ROUTES.testDb,
@@ -88,7 +95,7 @@ const adminDashboardRoute = createRoute({
 });
 
 export const routeTree = rootRoute.addChildren([
-  publicLayoutRoute.addChildren([homeRoute, loginRoute, testDbRoute, unauthorizedRoute, notFoundRoutePage]),
+  publicLayoutRoute.addChildren([homeRoute, loginRoute, ndaRoute, testDbRoute, unauthorizedRoute, notFoundRoutePage]),
   investorLayoutRoute.addChildren([investorDashboardRoute]),
   adminLayoutRoute.addChildren([adminDashboardRoute])
 ]);

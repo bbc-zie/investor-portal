@@ -1,4 +1,4 @@
-import type { AccountStatus, InvestorTier, UserRole } from "./platform.js";
+import type { AccountStatus, InvestorTier, NdaStatus, UserRole } from "./platform.js";
 
 export type AuthUser = {
   id: string;
@@ -7,6 +7,8 @@ export type AuthUser = {
   role: UserRole;
   tier: InvestorTier;
   status: AccountStatus;
+  ndaStatus: NdaStatus;
+  ndaSignedAt?: string | null;
 };
 
 export type AuthenticatedUser = AuthUser;

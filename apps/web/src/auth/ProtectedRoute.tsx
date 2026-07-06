@@ -8,6 +8,7 @@ import {
   type UserRole
 } from "@bbc-investor-portal/shared";
 import { LoadingState } from "../components/states/LoadingState";
+import { getPostAuthRoute, requiresNdaAcceptance } from "./access";
 import { useAuth } from "./auth-context";
 
 type ProtectedRouteProps = PropsWithChildren<{
@@ -27,6 +28,10 @@ export const ProtectedRoute = ({ allowedRoles, children }: ProtectedRouteProps) 
 
   if (!allowedRoles.includes(user.role)) {
     return <Navigate to={WEB_ROUTES.unauthorized} replace />;
+  }
+
+  if (requiresNdaAcceptance(user)) {
+    return <Navigate to={getPostAuthRoute(user, window.location.pathname)} replace />;
   }
 
   return <>{children}</>;

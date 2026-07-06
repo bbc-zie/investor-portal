@@ -1,153 +1,113 @@
-# Authentication Implementation Report
+# Authentication & NDA Implementation Report
 
 ## Summary
 
-Implemented Task 1: authentication foundation. The API now supports real JWT access-token authentication with bcrypt password verification, refresh-token persistence structure, authenticated `/api/auth/*` endpoints, and explicit `DEV_AUTH=true` fallback behavior. The web app now has an Axios auth client, auth context, login form, token attachment, and protected investor/admin route wrappers.
+Completed Developer A Module 1: Authentication & NDA.
 
-NDA workflow, user management CRUD, opportunities, documents, dashboards beyond route protection, profile, admin modules, capital calls, payments, distributions, audit logs, and reports were not implemented.
+The implemented flow is:
+
+Login -> authentication succeeds -> authorization is evaluated -> NDA status is evaluated -> user is redirected to the correct destination.
+
+No Module 2 features were implemented.
+
+## Scope Implemented
+
+- Login validation, loading, and error states.
+- Real API-backed authentication with access and refresh token handling.
+- Session persistence via existing token storage architecture.
+- Logout flow.
+- Expired and invalid token handling.
+- Role-aware authorization for public, approved investor, active investor, admin, and super admin users.
+- NDA evaluation after login and before protected route rendering.
+- NDA acceptance storage using existing `InvestorProfile` and `NdaRecord` schema.
+- Redirect back to intended destination after NDA acceptance.
 
 ## Files Added
 
-- `apps/api/prisma/migrations/20260703210000_auth_foundation/migration.sql`
-- `apps/api/prisma/migrations/migration_lock.toml`
-- `apps/api/src/lib/auth.ts`
-- `apps/api/src/routes/auth.ts`
-- `apps/api/src/scripts/seedDevUser.ts`
-- `apps/web/src/api/auth.ts`
-- `apps/web/src/auth/ProtectedRoute.tsx`
+- `apps/web/src/auth/access.ts`
+- `apps/web/src/pages/NdaPage.tsx`
+- `AUTH_IMPLEMENTATION_REPORT.md`
 
 ## Files Modified
 
-- `apps/api/.env.example`
-- `apps/api/package.json`
-- `apps/api/prisma/schema.prisma`
-- `apps/api/src/config/env.ts`
+- `apps/api/src/lib/auth.ts`
 - `apps/api/src/middleware/auth.ts`
-- `apps/api/src/routes/index.ts`
+- `apps/api/src/routes/auth.ts`
+- `apps/web/src/api/auth.ts`
 - `apps/web/src/api/client.ts`
+- `apps/web/src/auth/ProtectedRoute.tsx`
 - `apps/web/src/auth/auth-context.tsx`
-- `apps/web/src/auth/guards.tsx`
-- `apps/web/src/layouts/AdminLayout.tsx`
-- `apps/web/src/layouts/InvestorLayout.tsx`
+- `apps/web/src/components/layout/Topbar.tsx`
 - `apps/web/src/pages/LoginPage.tsx`
-- `package-lock.json`
+- `apps/web/src/routes.tsx`
 - `packages/shared/src/constants/api.ts`
+- `packages/shared/src/constants/auth.ts`
+- `packages/shared/src/constants/routes.ts`
 - `packages/shared/src/types/auth.ts`
 
-## Prisma Changes
+## Authentication Features Completed
 
-- Added nullable `User.passwordHash`.
-- Added nullable `User.lastLoginAt`.
-- Added `User.refreshTokens` relation.
-- Added `RefreshToken` model with:
-  - `id`
-  - `userId`
-  - `tokenHash`
-  - `expiresAt`
-  - `revokedAt`
-  - `createdAt`
-  - `updatedAt`
-- Added indexes for `RefreshToken.userId`, `tokenHash`, `expiresAt`, and `revokedAt`.
-- Created migration SQL at `apps/api/prisma/migrations/20260703210000_auth_foundation/migration.sql`.
+- Login uses the existing API authentication route.
+- Login validates email and password before submit.
+- Invalid login, rate limit, network, and unexpected errors show friendly messages.
+- Access and refresh tokens are persisted through the existing client storage layer.
+- API requests attach the access token automatically.
+- 401 responses attempt refresh once when a refresh token is available.
+- Invalid refresh or expired session clears tokens and stores a user-facing session message.
+- Logout revokes the refresh token when present and clears local session state.
 
-## API Endpoints Added
+## NDA Flow Completed
 
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
+- Authenticated user responses now include `ndaStatus` and `ndaSignedAt`.
+- Approved and active investors require NDA acceptance unless the NDA is signed or not required.
+- Admin and super admin users do not require investor NDA acceptance.
+- Users requiring NDA are routed to `/nda`.
+- NDA acceptance creates an existing-schema `NdaRecord` with `SIGNED` status.
+- After acceptance, the user is returned to the intended internal destination.
 
-The legacy `GET /api/me` remains in place and uses the same authenticated request user.
+## Authorization Completed
 
-## Frontend Changes
+- Public routes remain publicly accessible.
+- Investor protected routes allow authenticated roles and then enforce NDA status.
+- Admin protected routes require admin or super admin role.
+- Unauthorized users are redirected to the existing unauthorized page.
+- Inactive accounts are rejected by API middleware and route protection.
 
-- Added shared auth API client functions:
-  - `login()`
-  - `logout()`
-  - `getCurrentUser()`
-- Axios now attaches `Authorization: Bearer <accessToken>` when an access token is present.
-- MVP token persistence uses `localStorage` with a TODO to move to a hardened session strategy.
-- Auth context now exposes:
-  - `user`
-  - `accessToken`
-  - `isAuthenticated`
-  - `isLoading`
-  - `login()`
-  - `logout()`
-  - `loadCurrentUser()`
-- `/login` now submits email/password to the real auth API and redirects:
-  - `INVESTOR` to `/investor/dashboard`
-  - `ADMIN` and `SUPER_ADMIN` to `/admin/dashboard`
-- Investor routes allow `INVESTOR`, `ADMIN`, and `SUPER_ADMIN`.
-- Admin routes allow only `ADMIN` and `SUPER_ADMIN`.
+## Protected Routes
 
-## Env Vars Added
+- `/investor/*` remains protected by `InvestorProtectedRoute`.
+- `/admin/*` remains protected by `AdminProtectedRoute`.
+- `/nda` is an authenticated NDA flow page and does not expose module functionality.
 
-Added to `apps/api/.env.example`:
+## Environment Verification
 
-```env
-JWT_SECRET=change-me-in-local-env
-ACCESS_TOKEN_EXPIRES_IN=15m
-REFRESH_TOKEN_EXPIRES_IN=7d
-```
+- `DEV_AUTH` remains supported on the API through existing dev auth headers.
+- `VITE_DEV_AUTH` remains supported on the web client.
+- Dev-auth users now include signed NDA compatibility fields.
+- JWT configuration remains in environment variables:
+  - `JWT_SECRET`
+  - `ACCESS_TOKEN_EXPIRES_IN`
+  - `REFRESH_TOKEN_EXPIRES_IN`
+- No secrets were committed.
 
-`JWT_SECRET` is required by API auth code when verifying or signing JWTs. No hardcoded production user or JWT secret was added.
+## Verification Results
 
-## Development User Helper
-
-Added explicit, non-automatic script:
-
-```bash
-npm run seed:dev-user --workspace @bbc-investor-portal/api -- --email=dev@example.local --password=replace-with-12-plus-chars
-```
-
-Optional flags:
-
-```bash
---name="Development User" --role=INVESTOR --tier=APPROVED_INVESTOR --status=ACTIVE
-```
-
-The script refuses to run when `NODE_ENV=production`, requires an explicit email/password or `DEV_USER_EMAIL` and `DEV_USER_PASSWORD`, enforces a minimum 12-character password, and stores only a bcrypt hash.
-
-## Security Notes
-
-- Passwords are verified with bcrypt.
-- Refresh tokens are generated as random tokens and stored as SHA-256 hashes.
-- JWT secret is read from environment only.
-- Middleware authenticates bearer JWTs by default and only accepts development header users when `DEV_AUTH=true`.
-- Invalid bearer tokens are rejected with `401`.
-- Credentials and plaintext passwords are not logged.
-- No production credentials were added to the repository.
-
-## Commands Run and Results
-
-- `npm install bcrypt jsonwebtoken --workspace @bbc-investor-portal/api`
-  - First attempt failed due sandbox cache-only registry access.
-  - Approved rerun passed.
-- `npm install -D @types/jsonwebtoken --workspace @bbc-investor-portal/api`
-  - First attempt failed due sandbox cache-only registry access.
-  - Approved rerun passed.
-- `npm install -D @types/bcrypt --workspace @bbc-investor-portal/api`
-  - First attempt failed due sandbox cache-only registry access.
-  - Approved rerun passed.
-- `npm run typecheck`
-  - Initial run failed before Prisma Client regeneration and before `@types/bcrypt`.
-  - Final rerun passed for shared, API, and web workspaces.
-- `npx prisma validate --schema apps/api/prisma/schema.prisma`
-  - Initial run failed because `DATABASE_URL` was not set in the shell.
-  - Rerun with a placeholder `DATABASE_URL` passed.
-- `npx prisma generate --schema apps/api/prisma/schema.prisma`
-  - Initial run with placeholder `DATABASE_URL` failed with sandbox `EPERM`.
-  - Approved rerun passed and generated Prisma Client.
-- `npm run build`
-  - Initial run failed at Vite/esbuild spawn with sandbox `EPERM`.
-  - Approved rerun passed for shared, API, and web workspaces.
+- `npm run typecheck`: PASS
+- `npm run build`: PASS
+  - Initial sandboxed build failed at Vite/esbuild with `spawn EPERM`.
+  - Reran the same command with approved escalation; build completed successfully.
+- `prisma validate`: Not run. Prisma schema was not changed.
 
 ## Known Issues
 
-- Refresh-token rotation/refresh endpoint is not implemented yet; this task only adds the persistence structure and logout revocation support.
-- MVP frontend token storage uses `localStorage`; this should be replaced with a hardened session strategy before production.
-- The migration SQL was created but not applied to any database in this task.
+- Production token storage should be hardened later with HttpOnly Secure Cookies; the existing localStorage-based architecture was intentionally preserved.
+- Real NDA document versioning and expiry policy are deferred.
+- Profile editing, KYC, opportunities, documents, account settings, notifications, investor dashboard work, admin modules, CRUD, project logic, and financial logic are intentionally deferred.
 
-## Next Recommended Task
+## Next Module
 
-NDA Flow.
+feature/opportunities
+
+## Merge Readiness
+
+READY FOR PR

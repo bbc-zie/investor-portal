@@ -16,8 +16,13 @@ export const login = async (credentials: LoginRequest) => {
 
 export const logout = async () => {
   const refreshToken = getRefreshToken();
-  await apiClient.post(API_ENDPOINTS.auth.logout, { refreshToken });
-  clearAuthTokens();
+  try {
+    if (refreshToken) {
+      await apiClient.post(API_ENDPOINTS.auth.logout, { refreshToken });
+    }
+  } finally {
+    clearAuthTokens();
+  }
 };
 
 export const refreshTokens = async () => {
@@ -29,5 +34,10 @@ export const refreshTokens = async () => {
 
 export const getCurrentUser = async () => {
   const { data } = await apiClient.get<CurrentUserResponse>(API_ENDPOINTS.auth.me);
+  return data.user;
+};
+
+export const acceptNda = async () => {
+  const { data } = await apiClient.post<CurrentUserResponse>(API_ENDPOINTS.auth.ndaAccept);
   return data.user;
 };

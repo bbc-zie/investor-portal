@@ -1,26 +1,62 @@
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
 import type { StringValue } from "ms";
-import type { AuthUser } from "@bbc-investor-portal/shared";
+import { ADMIN_ROLES, NDA_REQUIRED_TIERS, type AuthUser, type NdaStatus } from "@bbc-investor-portal/shared";
 import { env, requireJwtSecret } from "../config/env.js";
 
 const getJwtSecret = () => requireJwtSecret();
 
-export const createAuthUser = (user: {
+type AuthUserSource = {
   id: string;
   email: string;
   name: string | null;
   role: AuthUser["role"];
   tier: AuthUser["tier"];
   status: AuthUser["status"];
-}): AuthUser => ({
-  id: user.id,
-  email: user.email,
-  name: user.name ?? user.email,
-  role: user.role,
-  tier: user.tier,
-  status: user.status
-});
+  investorProfile?: {
+    ndaRecords: {
+      status: NdaStatus;
+      signedAt: Date | null;
+      expiresAt: Date | null;
+      createdAt: Date;
+    }[];
+  } | null;
+};
+
+export const getResolvedNdaStatus = (user: AuthUserSource) => {
+  if (ADMIN_ROLES.includes(user.role) || !(NDA_REQUIRED_TIERS as readonly string[]).includes(user.tier)) {
+    return { ndaStatus: "NOT_REQUIRED" as const, ndaSignedAt: null };
+  }
+
+  const latestRecord = user.investorProfile?.ndaRecords[0];
+  if (!latestRecord) {
+    return { ndaStatus: "PENDING" as const, ndaSignedAt: null };
+  }
+
+  if (latestRecord.expiresAt && latestRecord.expiresAt.getTime() <= Date.now()) {
+    return { ndaStatus: "EXPIRED" as const, ndaSignedAt: latestRecord.signedAt?.toISOString() ?? null };
+  }
+
+  return {
+    ndaStatus: latestRecord.status,
+    ndaSignedAt: latestRecord.signedAt?.toISOString() ?? null
+  };
+};
+
+export const createAuthUser = (user: AuthUserSource): AuthUser => {
+  const nda = getResolvedNdaStatus(user);
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name ?? user.email,
+    role: user.role,
+    tier: user.tier,
+    status: user.status,
+    ndaStatus: nda.ndaStatus,
+    ndaSignedAt: nda.ndaSignedAt
+  };
+};
 
 export const signAccessToken = (userId: string) =>
   jwt.sign({ typ: "access" }, getJwtSecret(), {

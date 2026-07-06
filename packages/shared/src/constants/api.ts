@@ -9,7 +9,8 @@ export const API_ENDPOINTS = {
     login: "/auth/login",
     logout: "/auth/logout",
     refresh: "/auth/refresh",
-    me: "/auth/me"
+    me: "/auth/me",
+    ndaAccept: "/auth/nda/accept"
   }
 } as const;
 
@@ -21,6 +22,7 @@ export const API_PATHS = {
     login: `${API_BASE_PATH}${API_ENDPOINTS.auth.login}`,
     logout: `${API_BASE_PATH}${API_ENDPOINTS.auth.logout}`,
     refresh: `${API_BASE_PATH}${API_ENDPOINTS.auth.refresh}`,
-    me: `${API_BASE_PATH}${API_ENDPOINTS.auth.me}`
+    me: `${API_BASE_PATH}${API_ENDPOINTS.auth.me}`,
+    ndaAccept: `${API_BASE_PATH}${API_ENDPOINTS.auth.ndaAccept}`
   }
 } as const;

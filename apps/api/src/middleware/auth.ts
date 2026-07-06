@@ -38,7 +38,9 @@ const parseMockUser = (req: Request) => {
     name: readHeader(req, "x-dev-auth-name") ?? "Development User",
     role: roleHeader && USER_ROLES.includes(roleHeader) ? roleHeader : DEFAULT_USER_ROLE,
     tier: tierHeader && INVESTOR_TIERS.includes(tierHeader) ? tierHeader : DEFAULT_INVESTOR_TIER,
-    status: statusHeader && ACCOUNT_STATUSES.includes(statusHeader) ? statusHeader : DEFAULT_ACCOUNT_STATUS
+    status: statusHeader && ACCOUNT_STATUSES.includes(statusHeader) ? statusHeader : DEFAULT_ACCOUNT_STATUS,
+    ndaStatus: "SIGNED" as const,
+    ndaSignedAt: new Date().toISOString()
   };
 };
 
@@ -69,7 +71,19 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     }
 
     const userId = verifyAccessToken(token);
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        investorProfile: {
+          include: {
+            ndaRecords: {
+              orderBy: { createdAt: "desc" },
+              take: 1
+            }
+          }
+        }
+      }
+    });
 
     if (!user) {
       res.status(401).json({ error: "Unauthorized" });

@@ -6,7 +6,7 @@ import {
   type AuthenticatedUser,
   type LoginRequest
 } from "@bbc-investor-portal/shared";
-import { getCurrentUser, login as loginRequest, logout as logoutRequest } from "../api/auth";
+import { acceptNda as acceptNdaRequest, getCurrentUser, login as loginRequest, logout as logoutRequest } from "../api/auth";
 import { clearAuthTokens, getAccessToken, setAuthSessionMessage, setAuthTokens } from "../api/client";
 
 export type DevAuthUser = AuthenticatedUser;
@@ -18,6 +18,7 @@ type AuthContextValue = {
   isLoading: boolean;
   login: (credentials: LoginRequest) => Promise<DevAuthUser>;
   logout: () => Promise<void>;
+  acceptNda: () => Promise<DevAuthUser>;
   loadCurrentUser: () => Promise<DevAuthUser | null>;
   setDevAuthUser: (user: DevAuthUser | null) => void;
 };
@@ -32,7 +33,9 @@ const devAuthUser: DevAuthUser = {
   name: "Development User",
   role: DEFAULT_USER_ROLE,
   tier: "APPROVED_INVESTOR",
-  status: DEFAULT_ACCOUNT_STATUS
+  status: DEFAULT_ACCOUNT_STATUS,
+  ndaStatus: "SIGNED",
+  ndaSignedAt: new Date().toISOString()
 };
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
@@ -105,6 +108,24 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
   }, []);
 
+  const acceptNda = useCallback(async () => {
+    if (devAuthEnabled) {
+      const acceptedUser = {
+        ...devAuthUser,
+        ndaStatus: "SIGNED" as const,
+        ndaSignedAt: new Date().toISOString()
+      };
+      setAuthTokens("dev-auth-token");
+      setDevAuthUser(acceptedUser);
+      setAccessToken("dev-auth-token");
+      return acceptedUser;
+    }
+
+    const acceptedUser = await acceptNdaRequest();
+    setDevAuthUser(acceptedUser);
+    return acceptedUser;
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -113,10 +134,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       isLoading,
       login,
       logout,
+      acceptNda,
       loadCurrentUser,
       setDevAuthUser
     }),
-    [accessToken, isLoading, loadCurrentUser, login, logout, user]
+    [acceptNda, accessToken, isLoading, loadCurrentUser, login, logout, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

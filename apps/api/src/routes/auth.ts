@@ -37,7 +37,17 @@ authRouter.post("/login", async (req, res, next) => {
     }
 
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      include: {
+        investorProfile: {
+          include: {
+            ndaRecords: {
+              orderBy: { createdAt: "desc" },
+              take: 1
+            }
+          }
+        }
+      }
     });
 
     if (!user?.passwordHash) {
@@ -183,4 +193,40 @@ authRouter.post("/refresh", async (req, res, next) => {
 
 authRouter.get("/me", requireAuthenticated, (req, res) => {
   res.json({ user: req.user });
+});
+
+authRouter.post("/nda/accept", requireAuthenticated, async (req, res, next) => {
+  try {
+    const investorProfile = await prisma.investorProfile.upsert({
+      where: { userId: req.user!.id },
+      update: {},
+      create: { userId: req.user!.id }
+    });
+
+    await prisma.ndaRecord.create({
+      data: {
+        investorProfileId: investorProfile.id,
+        status: "SIGNED",
+        signedAt: new Date()
+      }
+    });
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      include: {
+        investorProfile: {
+          include: {
+            ndaRecords: {
+              orderBy: { createdAt: "desc" },
+              take: 1
+            }
+          }
+        }
+      }
+    });
+
+    res.json({ user: createAuthUser(user!) });
+  } catch (error) {
+    next(error);
+  }
 });
