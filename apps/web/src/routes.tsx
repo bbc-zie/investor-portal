@@ -11,6 +11,10 @@ import { InvestorDashboardPage } from "./pages/investor/InvestorDashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NdaPage } from "./pages/NdaPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { ProjectCreatePage } from "./pages/projects/ProjectCreatePage";
+import { ProjectDetailPage } from "./pages/projects/ProjectDetailPage";
+import { ProjectEditPage } from "./pages/projects/ProjectEditPage";
+import { ProjectsPage } from "./pages/projects/ProjectsPage";
 import { TestDbPage } from "./pages/TestDbPage";
 import { UnauthorizedPage } from "./pages/UnauthorizedPage";
 
@@ -88,14 +92,50 @@ const investorDashboardRoute = createRoute({
   component: InvestorDashboardPage
 });
 
+const investorProjectsRoute = createRoute({
+  getParentRoute: () => investorLayoutRoute,
+  path: WEB_ROUTES.investorProjects,
+  component: () => <ProjectsPage canManage={false} />
+});
+
+const investorProjectDetailRoute = createRoute({
+  getParentRoute: () => investorLayoutRoute,
+  path: WEB_ROUTES.investorProjectDetail,
+  component: () => <ProjectDetailPage canManage={false} />
+});
+
 const adminDashboardRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: WEB_ROUTES.adminDashboard,
   component: AdminDashboardPage
 });
 
+const adminProjectsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: WEB_ROUTES.adminProjects,
+  component: () => <ProjectsPage canManage />
+});
+
+const adminProjectCreateRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: WEB_ROUTES.adminProjectCreate,
+  component: ProjectCreatePage
+});
+
+const adminProjectDetailRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: WEB_ROUTES.adminProjectDetail,
+  component: () => <ProjectDetailPage canManage />
+});
+
+const adminProjectEditRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: WEB_ROUTES.adminProjectEdit,
+  component: ProjectEditPage
+});
+
 export const routeTree = rootRoute.addChildren([
   publicLayoutRoute.addChildren([homeRoute, loginRoute, ndaRoute, testDbRoute, unauthorizedRoute, notFoundRoutePage]),
-  investorLayoutRoute.addChildren([investorDashboardRoute]),
-  adminLayoutRoute.addChildren([adminDashboardRoute])
+  investorLayoutRoute.addChildren([investorDashboardRoute, investorProjectsRoute, investorProjectDetailRoute]),
+  adminLayoutRoute.addChildren([adminDashboardRoute, adminProjectsRoute, adminProjectCreateRoute, adminProjectDetailRoute, adminProjectEditRoute])
 ]);

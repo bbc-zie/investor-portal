@@ -15,7 +15,7 @@ import type {
 export const KYC_STATUSES = ["NOT_STARTED", "PENDING", "APPROVED", "REJECTED"] as const satisfies readonly KycStatus[];
 export const NDA_STATUSES = ["NOT_REQUIRED", "PENDING", "SIGNED", "EXPIRED"] as const satisfies readonly NdaStatus[];
 export const OPPORTUNITY_STATUSES = ["DRAFT", "OPEN", "CLOSED", "ARCHIVED"] as const satisfies readonly OpportunityStatus[];
-export const PROJECT_STATUSES = ["DRAFT", "ACTIVE", "COMPLETED", "ARCHIVED"] as const satisfies readonly ProjectStatus[];
+export const PROJECT_STATUSES = ["DRAFT", "COMING_SOON", "OPEN", "FUNDED", "CLOSED", "ARCHIVED"] as const satisfies readonly ProjectStatus[];
 export const INVESTMENT_STATUSES = ["PENDING", "ACTIVE", "EXITED", "CANCELLED"] as const satisfies readonly InvestmentStatus[];
 export const CAPITAL_CALL_STATUSES = ["DRAFT", "ISSUED", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED"] as const satisfies readonly CapitalCallStatus[];
 export const PAYMENT_STATUSES = ["PENDING", "PROCESSING", "PAID", "FAILED", "CANCELLED"] as const satisfies readonly PaymentStatus[];

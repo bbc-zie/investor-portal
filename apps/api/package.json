@@ -8,9 +8,11 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/server.js",
+    "db:check": "tsx src/scripts/checkDatabaseConnection.ts",
     "seed:dev-user": "tsx src/scripts/seedDevUser.ts",
     "prisma:validate": "prisma validate --schema prisma/schema.prisma",
-    "prisma:generate": "prisma generate --schema prisma/schema.prisma"
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma",
+    "prisma:migrate:status": "prisma migrate status --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@bbc-investor-portal/shared": "0.1.0",

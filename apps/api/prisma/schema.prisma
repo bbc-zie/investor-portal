@@ -48,9 +48,17 @@ enum OpportunityStatus {
 
 enum ProjectStatus {
   DRAFT
-  ACTIVE
-  COMPLETED
+  COMING_SOON
+  OPEN
+  FUNDED
+  CLOSED
   ARCHIVED
+}
+
+enum ProjectVisibility {
+  PRIVATE
+  INVESTORS
+  PUBLIC
 }
 
 enum InvestmentStatus {
@@ -182,20 +190,41 @@ model NdaRecord {
 }
 
 model Project {
-  id            String         @id @default(cuid())
-  name          String
-  slug          String         @unique
-  summary       String?
-  status        ProjectStatus  @default(DRAFT)
-  opportunities Opportunity[]
-  investments   Investment[]
-  distributions Distribution[]
-  documents     Document[]
-  auditLogs     AuditLog[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                String            @id @default(cuid())
+  name              String
+  slug              String            @unique
+  summary           String?
+  description       String?
+  status            ProjectStatus     @default(DRAFT)
+  investmentType    String
+  location          String
+  minimumInvestment Decimal           @default(0) @db.Decimal(18, 2)
+  targetRaise       Decimal           @default(0) @db.Decimal(18, 2)
+  raisedAmount      Decimal           @default(0) @db.Decimal(18, 2)
+  expectedReturn    String
+  investmentTerm    String
+  openingDate       DateTime?
+  closingDate       DateTime?
+  heroImageUrl      String?
+  coverImageUrl     String?
+  visibility        ProjectVisibility @default(INVESTORS)
+  deletedAt         DateTime?
+  opportunities     Opportunity[]
+  investments       Investment[]
+  distributions     Distribution[]
+  documents         Document[]
+  auditLogs         AuditLog[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@index([status])
+  @@index([location])
+  @@index([investmentType])
+  @@index([visibility])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([deletedAt, status])
+  @@index([deletedAt, visibility])
 }
 
 model Opportunity {

@@ -1,12 +1,15 @@
 import { Outlet } from "@tanstack/react-router";
 import { WEB_ROUTES } from "@bbc-investor-portal/shared";
-import { LayoutDashboard } from "lucide-react";
+import { FolderKanban, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { InvestorProtectedRoute } from "../auth/ProtectedRoute";
 import { Sidebar } from "../components/layout/Sidebar";
 import { Topbar } from "../components/layout/Topbar";
 
-const navItems = [{ label: "Dashboard", to: WEB_ROUTES.investorDashboard, icon: LayoutDashboard }];
+const navItems = [
+  { label: "Dashboard", to: WEB_ROUTES.investorDashboard, icon: LayoutDashboard },
+  { label: "Projects", to: WEB_ROUTES.investorProjects, icon: FolderKanban }
+];
 
 export const InvestorLayout = () => {
   const [open, setOpen] = useState(false);
