@@ -1,11 +1,14 @@
 import { Outlet } from "@tanstack/react-router";
 import { WEB_ROUTES } from "@bbc-investor-portal/shared";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Users } from "lucide-react";
 import { useState } from "react";
 import { Sidebar } from "../components/layout/Sidebar";
 import { Topbar } from "../components/layout/Topbar";
 
-const navItems = [{ label: "Dashboard", to: WEB_ROUTES.adminDashboard, icon: LayoutDashboard }];
+const navItems = [
+  { label: "Dashboard", to: WEB_ROUTES.adminDashboard, icon: LayoutDashboard },
+  { label: "Users", to: WEB_ROUTES.adminUsers, icon: Users }
+];
 
 export const AdminLayout = () => {
   const [open, setOpen] = useState(false);

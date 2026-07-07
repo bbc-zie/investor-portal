@@ -6,6 +6,8 @@ import { InvestorLayout } from "./layouts/InvestorLayout";
 import { PublicLayout } from "./layouts/PublicLayout";
 import { RootLayout } from "./layouts/RootLayout";
 import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
+import { AdminUserDetailPage } from "./pages/admin/AdminUserDetailPage";
+import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { HomePage } from "./pages/HomePage";
 import { InvestorDashboardPage } from "./pages/investor/InvestorDashboardPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -87,8 +89,20 @@ const adminDashboardRoute = createRoute({
   component: AdminDashboardPage
 });
 
+const adminUsersRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: WEB_ROUTES.adminUsers,
+  component: AdminUsersPage
+});
+
+const adminUserDetailRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: WEB_ROUTES.adminUserDetail,
+  component: AdminUserDetailPage
+});
+
 export const routeTree = rootRoute.addChildren([
   publicLayoutRoute.addChildren([homeRoute, loginRoute, testDbRoute, unauthorizedRoute, notFoundRoutePage]),
   investorLayoutRoute.addChildren([investorDashboardRoute]),
-  adminLayoutRoute.addChildren([adminDashboardRoute])
+  adminLayoutRoute.addChildren([adminDashboardRoute, adminUsersRoute, adminUserDetailRoute])
 ]);
